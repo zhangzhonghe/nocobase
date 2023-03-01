@@ -10,7 +10,7 @@ import { useReactToPrint } from 'react-to-print';
 import { useFormBlockContext, useTableBlockContext } from '../..';
 import { useAPIClient } from '../../api-client';
 import { useCollection } from '../../collection-manager';
-import { useFilter } from '../../filter-provider/FilterProvider';
+import { useFilterBlock } from '../../filter-provider/FilterProvider';
 import { transformToFilter } from '../../filter-provider/utils';
 import { useRecord } from '../../record-provider';
 import { removeNullCondition, useActionContext, useCompile } from '../../schema-component';
@@ -198,7 +198,7 @@ export const useCreateActionProps = () => {
 export const useFilterBlockActionProps = () => {
   const form = useForm();
   const actionField = useField();
-  const { getDataBlocks } = useFilter();
+  const { getDataBlocks } = useFilterBlock();
 
   actionField.data = actionField.data || {};
 
