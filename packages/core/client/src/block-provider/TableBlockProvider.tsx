@@ -8,8 +8,17 @@ import { useFixedSchema } from '../schema-component';
 
 export const TableBlockContext = createContext<any>({});
 
-const InternalTableBlockProvider = (props) => {
-  const { params, showIndex, dragSort, rowKey } = props;
+interface Props {
+  params?: any;
+  showIndex?: boolean;
+  dragSort?: boolean;
+  rowKey?: string;
+  /** 目前可能的值仅为 'filter'，用于区分筛选区块和数据区块 */
+  blockType?: 'filter';
+}
+
+const InternalTableBlockProvider = (props: Props) => {
+  const { params, showIndex, dragSort, rowKey, blockType } = props;
   const field = useField();
   const { resource, service } = useBlockRequestContext();
   // if (service.loading) {
@@ -26,6 +35,7 @@ const InternalTableBlockProvider = (props) => {
         showIndex,
         dragSort,
         rowKey,
+        blockType,
       }}
     >
       <RenderChildrenWithAssociationFilter {...props} />
@@ -149,6 +159,17 @@ export const useTableBlockProps = () => {
           : [`-${sorter.field}`]
         : globalSort || ctx.service.params?.[0]?.sort;
       ctx.service.run({ ...ctx.service.params?.[0], page: current, pageSize, sort });
+    },
+    // 该方法是专门为筛选区块服务的
+    onClickRow(record, setSelectedRowKeys) {
+      if (ctx.blockType !== 'filter') return;
+
+      const value = [record[ctx.rowKey || 'id']];
+
+      ctx.field.data = ctx?.field?.data || {};
+      ctx.field.data.selectedRowKeys = value;
+      // 更新表格的选中状态
+      setSelectedRowKeys(value);
     },
   };
 };

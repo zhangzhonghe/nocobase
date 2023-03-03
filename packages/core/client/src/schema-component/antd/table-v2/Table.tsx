@@ -151,7 +151,7 @@ export const Table: any = observer((props: any) => {
   const field = useField<ArrayField>();
   const columns = useTableColumns();
   const { pagination: pagination1, useProps, onChange, ...others1 } = props;
-  const { pagination: pagination2, ...others2 } = useProps?.() || {};
+  const { pagination: pagination2, onClickRow, ...others2 } = useProps?.() || {};
   const {
     dragSort = false,
     showIndex = true,
@@ -165,6 +165,13 @@ export const Table: any = observer((props: any) => {
   const onRowDragEnd = useMemoizedFn(others.onRowDragEnd || (() => {}));
   const paginationProps = usePaginationProps(pagination1, pagination2);
   const requiredValidator = field.required || required;
+  const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>(field?.data?.selectedRowKeys || []);
+
+  const onRow = (record) => {
+    return {
+      onClick: () => onClickRow(record, setSelectedRowKeys),
+    };
+  };
 
   useEffect(() => {
     field.setValidator((value) => {
@@ -262,10 +269,11 @@ export const Table: any = observer((props: any) => {
     rowSelection: rowSelection
       ? {
           type: 'checkbox',
-          selectedRowKeys: field?.data?.selectedRowKeys || [],
+          selectedRowKeys: selectedRowKeys,
           onChange(selectedRowKeys: any[], selectedRows: any[]) {
             field.data = field.data || {};
             field.data.selectedRowKeys = selectedRowKeys;
+            setSelectedRowKeys(selectedRowKeys);
             onRowSelectionChange?.(selectedRowKeys, selectedRows);
           },
           renderCell: (checked, record, index, originNode) => {
@@ -417,6 +425,7 @@ export const Table: any = observer((props: any) => {
           onChange={(pagination, filters, sorter, extra) => {
             onTableChange?.(pagination, filters, sorter, extra);
           }}
+          onRow={onRow}
           tableLayout={'auto'}
           scroll={scroll}
           columns={columns}
