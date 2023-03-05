@@ -169,7 +169,7 @@ export const Table: any = observer((props: any) => {
 
   const onRow = (record) => {
     return {
-      onClick: () => onClickRow(record, setSelectedRowKeys),
+      onClick: () => onClickRow(record, setSelectedRowKeys, selectedRowKeys),
     };
   };
 
