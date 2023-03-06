@@ -249,15 +249,25 @@ export const useFilterBlockActionProps = () => {
             const target = targets.find((target) => target.name === block.name);
             if (!target) return;
 
-            block.filters[uid] = transformToFilter(form.values, fieldSchema);
-
             const param = block.service.params?.[0] || {};
-            return block.doFilter({
-              ...param,
-              page: 1,
-              // TODO: 应该也需要合并数据区块中所设置的筛选条件
-              filter: mergeFilter([...Object.values(block.filters).map((filter) => removeNullCondition(filter))]),
-            });
+            // 保留原有的 filter
+            const storedFilter = block.service.params?.[1]?.filters || {};
+
+            storedFilter[uid] = removeNullCondition(transformToFilter(form.values, fieldSchema));
+
+            const mergedFilter = mergeFilter([
+              ...Object.values(storedFilter).map((filter) => removeNullCondition(filter)),
+              block.defaultFilter,
+            ]);
+
+            return block.doFilter(
+              {
+                ...param,
+                page: 1,
+                filter: mergedFilter,
+              },
+              { filters: storedFilter },
+            );
           }),
         );
         actionField.data.loading = false;
@@ -289,15 +299,21 @@ export const useResetBlockActionProps = () => {
             const target = targets.find((target) => target.name === block.name);
             if (!target) return;
 
-            // 只清空当前筛选区块的数据
-            delete block.filters[uid];
-
             const param = block.service.params?.[0] || {};
-            return block.doFilter({
-              ...param,
-              page: 1,
-              filter: mergeFilter([...Object.values(block.filters).map((filter) => removeNullCondition(filter))]),
-            });
+            // 保留原有的 filter
+            const storedFilter = block.service.params?.[1]?.filters || {};
+
+            delete storedFilter[uid];
+            const mergedFilter = mergeFilter([...Object.values(storedFilter), block.defaultFilter]);
+
+            return block.doFilter(
+              {
+                ...param,
+                page: 1,
+                filter: mergedFilter,
+              },
+              { filters: storedFilter },
+            );
           }),
         );
         actionField.data.loading = false;
@@ -917,22 +933,28 @@ export const useAssociationFilterBlockProps = () => {
       if (!target) return;
 
       const key = `${uid}${fieldSchema.name}`;
+      const param = block.service.params?.[0] || {};
+      // 保留原有的 filter
+      const storedFilter = block.service.params?.[1]?.filters || {};
 
       if (value.length) {
-        block.filters[key] = {
+        storedFilter[key] = {
           [filterKey]: value,
         };
       } else {
-        delete block.filters[key];
+        delete storedFilter[key];
       }
 
-      const param = block.service.params?.[0] || {};
-      return block.doFilter({
-        ...param,
-        page: 1,
-        // TODO: 应该也需要合并数据区块中所设置的筛选条件
-        filter: mergeFilter([...Object.values(block.filters).map((filter) => removeNullCondition(filter))]),
-      });
+      const mergedFilter = mergeFilter([...Object.values(storedFilter), block.defaultFilter]);
+
+      return block.doFilter(
+        {
+          ...param,
+          page: 1,
+          filter: mergedFilter,
+        },
+        { filters: storedFilter },
+      );
     });
   };
 
